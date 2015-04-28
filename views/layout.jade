@@ -6,17 +6,19 @@ html
     meta(name='viewport', content='width=device-width, initial-scale=1.0')
     meta(name='csrf-token', content=_csrf)
     title #{title} - Hackathon Starter
-    //!= css('vendor/leaflet/leaflet')
-    <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v3/3.13/themes/css/cartodb.css" />
+    if title == 'HH Trees'
+      != css('vendor/cartodb/cartodb')
     != css('main')
   body
     if title != 'HH Trees'
       include partials/header
 
     .container
-      include partials/flash
+      //include partials/flash
       block content
 
     //include partials/footer
 
+    if title == 'HH Trees'
+      != js('lib/cartodb.js')
     != js('application')
