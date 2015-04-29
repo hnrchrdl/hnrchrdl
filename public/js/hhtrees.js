@@ -1,3 +1,10 @@
+/**
+ * js for the hhtrees app 
+ */
+
+
+//= require lib/cartodb
+
 (function($) {
   'use strict';
 

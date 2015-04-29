@@ -16,9 +16,7 @@
 
  */
 
-//= require lib/lodash.min.js
-//= require lib/jquery-2.1.3.min.js
-//= require lib/jquery.nicescroll.min.js
-//= require lib/bootstrap.min.js
-
-//= require main
+//= require lib/lodash.min
+//= require lib/jquery-2.1.3.min
+//= require lib/jquery.nicescroll.min
+//= require lib/bootstrap.min
