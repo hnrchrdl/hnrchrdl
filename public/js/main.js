@@ -311,11 +311,11 @@ cartodb.createLayer(map, {
   layer.getSubLayer(0).setInteraction(true);
 
   layer.on('featureOver', function(e, latlng, pos, data, subLayerIndex) {
-    var x = event.clientX,
-        y = event.clientY,
+    var x = e.clientX,
+        y = e.clientY,
         el = document.elementFromPoint(x, y);
     $('.info').text(data.baumart);
-    $('.info').fadeIn();
+    $('.info').show();
   });
   layer.on('featureOut', function(e, latlng, pos, data, subLayerIndex) {
     $('.info').hide();
