@@ -9,7 +9,7 @@ var bodyParser = require('body-parser');
 var logger = require('morgan');
 var errorHandler = require('errorhandler');
 //var lusca = require('lusca');
-var methodOverride = require('method-override');
+//var methodOverride = require('method-override');
 //var multer  = require('multer');
 
 var _ = require('lodash');
@@ -17,7 +17,7 @@ var _ = require('lodash');
 //var flash = require('express-flash');
 var path = require('path');
 //var mongoose = require('mongoose');
-var passport = require('passport');
+//var passport = require('passport');
 var expressValidator = require('express-validator');
 var connectAssets = require('connect-assets');
 
@@ -25,8 +25,8 @@ var connectAssets = require('connect-assets');
  * Controllers (route handlers).
  */
 var homeController = require('./controllers/home');
-var userController = require('./controllers/user');
-var apiController = require('./controllers/api');
+//var userController = require('./controllers/user');
+//var apiController = require('./controllers/api');
 var contactController = require('./controllers/contact');
 
 var hhtreesController = require('./controllers/hhtrees');
@@ -64,8 +64,8 @@ app.use(logger('dev'));
 //app.use(bodyParser.json());
 //app.use(bodyParser.urlencoded({ extended: true }));
 //app.use(multer({ dest: path.join(__dirname, 'uploads') }));
-app.use(expressValidator());
-app.use(methodOverride());
+//app.use(expressValidator());
+//app.use(methodOverride());
 //app.use(cookieParser());
 //app.use(session({
 //  resave: true,
@@ -81,14 +81,16 @@ app.use(methodOverride());
 //  xframe: 'SAMEORIGIN',
 //  xssProtection: true
 //}));
-app.use(function(req, res, next) {
-  res.locals.user = req.user;
-  next();
-});
-app.use(function(req, res, next) {
-  if (/api/i.test(req.path)) req.session.returnTo = req.path;
-  next();
-});
+
+
+//app.use(function(req, res, next) {
+//  res.locals.user = req.user;
+//  next();
+//});
+//app.use(function(req, res, next) {
+//  if (/api/i.test(req.path)) req.session.returnTo = req.path;
+//  next();
+//});
 app.use(express.static(path.join(__dirname, 'public'), { maxAge: 31557600000 }));
 
 /**
@@ -120,7 +122,7 @@ app.get('/projects/hhtrees', hhtreesController.index);
 /**
  * API examples routes.
  */
-app.get('/api', apiController.getApi);
+//app.get('/api', apiController.getApi);
 // app.get('/api/lastfm', apiController.getLastfm);
 // app.get('/api/nyt', apiController.getNewYorkTimes);
 // app.get('/api/aviary', apiController.getAviary);
