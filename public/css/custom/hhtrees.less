@@ -1,0 +1,113 @@
+// Custom CSS for HH Trees
+
+// VARIABLES
+@dark: rgb(10,10,10);
+@darkO: rgba(10,10,10,0.8);
+@darker: darken(rgb(10,10,10), 10%);
+@darkerO: darken(rgba(10,10,10,0.8), 10%);
+@foreground: #ccc;
+
+// MIXINS
+.Dark-Background {
+  background-color: @dark;
+  background-color: @darkO;
+}
+
+.Dark-Background-Hover {
+  background-color:  @darker;
+  background-color: @darkerO;
+}
+
+
+// CSS
+.map, .about, #loading, .legend, .controls, #info {
+  position: absolute;
+}
+
+.map, .about {
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  .Dark-Background;
+  cursor: auto;
+  //z-index: 100000;
+  overflow: hidden;
+}
+
+#loading {
+  top: 40%;
+  left: 45%;
+  color: rgb(90,90,90);
+  color: rgba(90,90,90,0.7);
+  font-size: 500%;
+}
+
+.about {
+  color: @foreground;
+  .fa-close {
+    font-size: 300%;
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    &:hover {
+      cursor: pointer;
+    }
+  }
+  .inner {
+    margin: 40px 30% 0 30%;
+  }
+}
+
+.legend {
+  top: 0;
+  bottom: 16px;
+  right: 0;
+  width: 160px;
+  overflow-y: auto;
+  .Dark-Background;
+  color: @foreground;
+  font-size: 90%;
+}
+
+.legend-item {
+  padding: 7px 30px 7px 10px;
+  border-bottom: 1px solid @darker;
+  border-bottom: 1px solid @darkerO;
+
+}
+
+.controls {
+  top: 8px;
+  left: 8px;
+}
+
+.controlelement {
+  font-size: 90%;
+  float: left;
+  align: center;
+  color: @foreground;
+  padding: 10px 6px 10px 12px;
+  .Dark-Background;
+  &:hover {
+    cursor: pointer;
+    .Dark-Background-Hover;
+  }
+  &.left {
+    border-right: 1px solid @darker;
+    border-right: 1px solid @darkerO;
+  }
+}
+
+.abouttrigger {
+  margin-left: 20px;
+}
+
+#info {
+  display: none;
+  padding: 8px 10px 8px 10px;
+}
+
+.leaflet-control-attribution {
+  .Dark-Background !important;
+}
