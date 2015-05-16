@@ -249,6 +249,7 @@ function hhtreesApp() {
       17: 1 / 1.193,
       18: 1 / 0.596
       //19: 1 / 0.298
+
     }
   };
 
@@ -272,6 +273,7 @@ function hhtreesApp() {
     // Define Cartocss.
     generateCartoCss: function() {
       var self = this;
+
       var cartoCss = '';
 
       // Marker defaults
@@ -285,6 +287,7 @@ function hhtreesApp() {
       // Marker heights.
       var exaggeration = 1.5;
       _.each(_.range(app.options.minZoom, app.options.maxZoom + 1), function(zoomlevel) {
+
         cartoCss +=  '[zoom = ' + zoomlevel + '] { marker-height: [krone_int] * ' + self.getPixelMeter(zoomlevel) * exaggeration + '; }';
       });
       cartoCss += '} ';
@@ -294,6 +297,7 @@ function hhtreesApp() {
       // a given marker, caseinsensitive.
       $.each(app.model.treeTypes, function(index, tree) {
         $.each(tree.filter, function(_index, filter) {
+
           cartoCss +=  '#' + app.options.dataset + ' [ baumart =~ ".*' + filter + '.*" ] { marker-fill: ' + tree.color + ';} ';
           cartoCss +=  '#' + app.options.dataset + ' [ baumart =~ ".*' + filter.toLowerCase() + '.*" ] { marker-fill: ' + tree.color + ';} ';
         });
@@ -455,6 +459,7 @@ function hhtreesApp() {
 
   return app;
 }
+
 
 
 $(function() {
