@@ -30,7 +30,7 @@ var homeController = require('./controllers/home');
 var contactController = require('./controllers/contact');
 
 var hhtreesController = require('./controllers/hhtrees');
-
+var birdsEyeController = require('./controllers/birdseye');
 /**
  * API keys and Passport configuration.
  */
@@ -118,6 +118,9 @@ app.get('/contact', contactController.getContact);
  * Project app routes.
  */
 app.get('/projects/hhtrees', hhtreesController.index);
+
+app.get('/projects/birdseye', birdsEyeController.index);
+app.get('/projects/birdseye/api/tweets', birdsEyeController.tweets);
 
 /**
  * API examples routes.

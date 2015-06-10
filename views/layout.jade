@@ -14,11 +14,10 @@ html
       include partials/header
 
     .container
-      //include partials/flash
       block content
-
-    //include partials/footer
 
     != js('application')
     if title == 'HH Trees'
       != js('hhtrees')
+    if title == 'Bird\'s eye'
+      != js('birdseye')
