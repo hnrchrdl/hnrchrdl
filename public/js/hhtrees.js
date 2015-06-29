@@ -250,7 +250,9 @@ function hhtreesApp() {
       18: 1 / 0.596
       //19: 1 / 0.298
 
-    }
+    },
+    nameFilter: [],
+    idFilter: []
   };
 
 
@@ -298,8 +300,8 @@ function hhtreesApp() {
       $.each(app.model.treeTypes, function(index, tree) {
         $.each(tree.filter, function(_index, filter) {
 
-          cartoCss +=  '#' + app.options.dataset + ' [ baumart =~ ".*' + filter + '.*" ] { marker-fill: ' + tree.color + ';} ';
-          cartoCss +=  '#' + app.options.dataset + ' [ baumart =~ ".*' + filter.toLowerCase() + '.*" ] { marker-fill: ' + tree.color + ';} ';
+          cartoCss +=  '#' + app.options.cartodb.dataset + ' [ baumart =~ ".*' + filter + '.*" ] { marker-fill: ' + tree.color + ';} ';
+          cartoCss +=  '#' + app.options.cartodb.dataset + ' [ baumart =~ ".*' + filter.toLowerCase() + '.*" ] { marker-fill: ' + tree.color + ';} ';
         });
       });
       return cartoCss;
@@ -321,9 +323,9 @@ function hhtreesApp() {
     },
 
 
-    createLayer: function() {
+    createLayer: function(filter) {
       // Create a layer with one sublayer.
-      this.layer = cartodb.createLayer(this.map, {
+      cartodb.createLayer(this.map, {
         user_name: app.options.cartodb.username,
         type: 'cartodb',
         sublayers: [{
@@ -334,6 +336,7 @@ function hhtreesApp() {
       })
       .addTo(this.map) // Add the layer to our map which already contains one sublayer.
       .done(function(layer) {
+        app.controller.layer = layer;
         //Create and add a new sublayer
         layer.getSubLayer(0).setInteraction(true);
 
@@ -361,7 +364,35 @@ function hhtreesApp() {
       }).error(function(err) {
         console.log(err);
       });
+    },
+
+    clearMap: function() {
+      this.map.removeLayer(this.layer);
+    },
+
+    toggleNameFilter: function(filter) {
+      if(_.indexOf(app.model.nameFilter, filter) === -1) {
+        // Add to from nameFilter Array
+        app.model.nameFilter.push(filter);
+      } else {
+        // Remove from nameFilter Array
+        app.model.nameFilter.splice(_.indexOf(app.model.nameFilter, filter), 1);
+      }
+      var sql = '';
+      if(app.model.nameFilter.length === 0) {
+        sql = 'SELECT * FROM ' + app.options.cartodb.dataset;
+      } else {
+        // All the items of the array except from the last of the nameFilter Array
+        _.each(_.initial(app.model.nameFilter), function(term) {
+          sql += 'SELECT * FROM ' + app.options.cartodb.dataset + ' WHERE baumart ILIKE \'%' + term + '%\' UNION ';
+        });
+        // The last element of the nameFilter Array
+        sql += sql += 'SELECT * FROM ' + app.options.cartodb.dataset + ' WHERE baumart ILIKE \'%' + _.last(app.model.nameFilter) + '%\'';
+
+      }
+      this.layer.getSubLayer(0).setSQL(sql);
     }
+
   };
 
 
@@ -369,6 +400,7 @@ function hhtreesApp() {
 
     init: function() {
       this.fillLegendContent();
+      this.initFilter();
       this.makeZoomButtonsWork();
       this.makeInfoHoverFollowCursor();
       this.registerAboutTrigger();
@@ -378,7 +410,8 @@ function hhtreesApp() {
     fillLegendContent: function() {
       // Fill legend
       $.each(app.model.treeTypes, function(index, tree) {
-        $('#legend').append('<div id="legend-item-' + index + '" class="legend-item"><svg id="circle-' + index +
+        $('#legend').append('<div id="legend-item-' + index + '" class="legend-item" data-filter="' + tree.name +
+            '"><svg id="circle-' + index +
             '" height="10" width="20" xmlns="http://www.w3.org/2000/svg">' +
             '<circle id="greencircle" cx="5" cy="5" r="5" fill="' +  tree.color + '" opacity="0.65" />' +
             '</svg>' + tree.name + '</div>');
@@ -387,6 +420,36 @@ function hhtreesApp() {
             '" height="10" width="20" xmlns="http://www.w3.org/2000/svg">' +
             '<circle id="greencircle" cx="5" cy="5" r="5" fill="#fff" opacity="0.65" />' +
             '</svg>Sonstige</div>');
+    },
+
+    initFilter: function () {
+      $(document).on('click', '.legend-item',  function() {
+        console.log($(this).data('filter'));
+        app.controller.toggleNameFilter($(this).data('filter'));
+        app.view.nameFilterVis();
+      });
+    },
+
+    nameFilterVis: function() {
+      var nameFilter = app.model.nameFilter;
+      if(nameFilter.length === 0) {
+        // remove all inactives
+        console.log('remove');
+        $('.legend-item').each(function(index) {
+          $(this).removeClass('inactive');
+        });
+      } else {
+        console.log('add');
+        $('.legend-item').each(function(index) {
+          if(_.indexOf(nameFilter, $(this).data('filter')) === -1) {
+            if(!$(this).hasClass('inactive')) {
+              $(this).addClass('inactive');
+            }
+          } else {
+            $(this).removeClass('inactive');
+          }
+        });
+      }
     },
 
     makeZoomButtonsWork: function() {
