@@ -24,7 +24,10 @@ function hhtreesApp() {
 
   // Define tree type model.
   // This could be improved.
+
   app.model = {
+
+    treetypes: [],
 
     treeTypes: [
       {
@@ -53,9 +56,7 @@ function hhtreesApp() {
         filter: ['Birne']
       },
       {
-        name: 'Birke',
-        color: '#90CAF9',
-        filter: ['Birke']
+        name: 'Birke', color: '#90CAF9', filter: ['Birke']
       },
       {
         name: 'Buche',
@@ -259,16 +260,146 @@ function hhtreesApp() {
   app.controller = {
 
     launchApp: function() {
-      this.generateCartoCss();
-      this.initMap();
-      this.createLayer();
-      app.view.init();
+      app.controller.processData(function cb() {
+        app.controller.generateTrees();
+        app.controller.generateCartoCss();
+        app.controller.initMap();
+        app.controller.createLayer();
+        app.view.init();
+      });
+
+
+    },
+
+    processData: function getData(cb) {
+      var sql = new cartodb.SQL({ user: app.options.cartodb.username });
+
+      sql.execute('SELECT * FROM  ' + app.options.cartodb.dataset)
+      .done(function(data) {
+
+        var parseDate = d3.time.format('%Y').parse;
+        data.rows.forEach(function(row) {
+          row.pflanzjahr = parseDate(row.pflanzjahr.toString()).getFullYear();
+        });
+        app.model.rawdata = data.rows;
+        console.log(app.model.rawdata);
+
+        app.controller.treecf = crossfilter(app.model.rawdata);
+
+        // dimensions
+        app.controller.dim = {};
+        app.controller.dim.baumart = app.controller.treecf.dimension(function(row) {
+          return row.baumart;
+        });
+        app.controller.dim.pflanzjahr = app.controller.treecf.dimension(function(row) {
+          return row.pflanzjahr;
+        });
+        app.controller.dim.krone = app.controller.treecf.dimension(function(row) {
+          return row.krone_int;
+        })
+
+        //groups
+        app.controller.groups = {};
+        app.controller.groups.baumart = app.controller.dim.baumart.group();
+        app.controller.groups.pflanzjahr = app.controller.dim.pflanzjahr.group();
+        app.controller.groups.krone = app.controller.dim.krone.group();
+
+        // charts
+        app.view.charts = {};
+        app.view.charts.baumart = dc.rowChart('#legend')
+        .dimension(app.controller.dim.baumart)
+        .group(app.controller.groups.baumart)
+        .width(320)
+        .height(800)
+        .margins({top: 20, right: 20, bottom: 20, left: 20})
+        .ordering(function(d) { return -d.value })
+        .colors (d3.scale.category20().range())
+        .gap(0)
+        .cap(20)
+        .on("postRender", function(chart) {
+            chart.select("svg")
+                .attr("viewBox", "0 0 320 800")
+                .attr("preserveAspectRatio", "xMinYMin")
+                .attr("width", "100%")
+                .attr("height", "100%");
+            chart.redraw();
+        })
+        .on('filtered', function(chart) {
+          app.model.nameFilter = chart.filters();
+          app.controller.applyFilter();
+        })
+        .on('postRedraw', function(chart) {
+          app.view.correctColors();
+        });
+
+        app.view.charts.pflanzjahr = dc.barChart('#pflanzjahr')
+        .dimension(app.controller.dim.pflanzjahr)
+        .group(app.controller.groups.pflanzjahr)
+        .width(420)
+        .height(300)
+        .margins({top: 20, right: 0, bottom: 20, left: 50})
+        .x(d3.scale.linear().domain([1800, 2015]))
+        .elasticY(true)
+        .gap(0)
+        .on('filtered', function(chart) {
+          app.model.pflanzjahrFilter = chart.filters()[0];
+          app.controller.applyFilter();
+        });;
+
+        app.view.charts.krone = dc.barChart('#krone')
+        .dimension(app.controller.dim.krone)
+        .group(app.controller.groups.krone)
+        .width(420)
+        .height(300)
+        .margins({top: 20, right: 0, bottom: 20, left: 50})
+        .x(d3.scale.linear().domain([0, 25]))
+        .elasticY(true)
+        .gap(0)
+        .on('filtered', function(chart) {
+          app.model.kronenFilter = chart.filters()[0];
+          console.log(app.model.kronenFilter);
+          app.controller.applyFilter();
+        });
+
+        dc.renderAll();
+
+
+        var treecounts = _.countBy(data.rows, function(row) {
+          return row.baumart;
+        });
+
+        var types = _.chain(data.rows).pluck('baumart').uniq().value();
+
+        app.model.treetypes = _.chain(types)
+        .map(function(tree) { return { name: tree, count: treecounts[tree] } })
+        .remove(function(tree) { return tree.name !== null })
+        .sortBy('count').reverse()
+        .value();
+
+        cb(); // callback when done
+      })
+      .error(function(errors) {
+        // errors contains a list of errors
+        console.log("errors:" + errors);
+      });
+    },
+
+    generateTrees: function generateTreeTypes() {
+      // https://github.com/mbostock/d3/wiki/Ordinal-Scaless
+      var colors = d3.scale.category20().range();
+      var toptreetypes = _.take(app.model.treetypes, 20);
+      app.model.trees = _.map(toptreetypes, function(tree, i) {
+        return {
+          name: tree.name, count: tree.count, color: colors[i], filter: [tree.name]
+        }
+      });
     },
 
 
     getPixelMeter: function(zoomlevel) {
       // return the meter equivalent for a pixel per given zoomlevel
       return app.model.pixelMeterSizes[zoomlevel];
+
     },
 
 
@@ -282,7 +413,7 @@ function hhtreesApp() {
       cartoCss +=  '#' + app.options.cartodb.dataset + ' {';
       cartoCss += 'marker-opacity: 0.65; ';
       cartoCss += 'marker-height: [krone_int]; ';
-      cartoCss += 'marker-fill: #fff; ';
+      cartoCss += 'marker-fill: #eee; ';
       cartoCss += 'marker-line-width: 0; ';
       cartoCss += 'marker-allow-overlap: true; ';
 
@@ -297,11 +428,13 @@ function hhtreesApp() {
       // Marker colors.
       // Filter is applied to datasets that contain
       // a given marker, caseinsensitive.
-      $.each(app.model.treeTypes, function(index, tree) {
+      //$.each(app.model.treeTypes, function(index, tree) {
+      $.each(app.model.trees, function(index, tree) {
         $.each(tree.filter, function(_index, filter) {
 
-          cartoCss +=  '#' + app.options.cartodb.dataset + ' [ baumart =~ ".*' + filter + '.*" ] { marker-fill: ' + tree.color + ';} ';
-          cartoCss +=  '#' + app.options.cartodb.dataset + ' [ baumart =~ ".*' + filter.toLowerCase() + '.*" ] { marker-fill: ' + tree.color + ';} ';
+          //cartoCss +=  '#' + app.options.cartodb.dataset + ' [ baumart =~ ".*' + filter + '.*" ] { marker-fill: ' + tree.color + ';} ';
+          //cartoCss +=  '#' + app.options.cartodb.dataset + ' [ baumart =~ ".*' + filter.toLowerCase() + '.*" ] { marker-fill: ' + tree.color + ';} ';
+          cartoCss +=  '#' + app.options.cartodb.dataset + ' [ baumart ="' + filter + '" ] { marker-fill: ' + tree.color + ';} ';
         });
       });
       return cartoCss;
@@ -370,26 +503,33 @@ function hhtreesApp() {
       this.map.removeLayer(this.layer);
     },
 
-    toggleNameFilter: function(filter) {
-      if(_.indexOf(app.model.nameFilter, filter) === -1) {
-        // Add to from nameFilter Array
-        app.model.nameFilter.push(filter);
-      } else {
-        // Remove from nameFilter Array
-        app.model.nameFilter.splice(_.indexOf(app.model.nameFilter, filter), 1);
-      }
+    applyFilter: function(filter) {
       var sql = '';
       if(app.model.nameFilter.length === 0) {
         sql = 'SELECT * FROM ' + app.options.cartodb.dataset;
       } else {
         // All the items of the array except from the last of the nameFilter Array
         _.each(_.initial(app.model.nameFilter), function(term) {
-          sql += 'SELECT * FROM ' + app.options.cartodb.dataset + ' WHERE baumart ILIKE \'%' + term + '%\' UNION ';
+          sql += 'SELECT * FROM ' + app.options.cartodb.dataset +
+              ' WHERE baumart ILIKE \'%' + term + '%\' UNION ';
         });
         // The last element of the nameFilter Array
-        sql += sql += 'SELECT * FROM ' + app.options.cartodb.dataset + ' WHERE baumart ILIKE \'%' + _.last(app.model.nameFilter) + '%\'';
-
+        sql += 'SELECT * FROM ' + app.options.cartodb.dataset +
+            ' WHERE baumart ILIKE \'%' + _.last(app.model.nameFilter) + '%\'';
       }
+      if(app.model.kronenFilter) {
+        sql += ' INTERSECT SELECT * FROM ' + app.options.cartodb.dataset +
+            ' WHERE krone_int BETWEEN ' + app.model.kronenFilter[0].toString() +
+            ' AND ' + app.model.kronenFilter[1].toString();
+      }
+      if(app.model.pflanzjahrFilter) {
+        sql += ' INTERSECT SELECT * FROM ' + app.options.cartodb.dataset +
+            ' WHERE pflanzjahr BETWEEN ' + app.model.pflanzjahrFilter[0].toString() +
+            ' AND ' + app.model.pflanzjahrFilter[1].toString();
+      }
+
+      console.log(sql);
+
       this.layer.getSubLayer(0).setSQL(sql);
     }
 
@@ -399,32 +539,47 @@ function hhtreesApp() {
   app.view = {
 
     init: function() {
-      this.fillLegendContent();
-      this.initFilter();
+      //  this.fillLegendContent();
+      //this.generateLegendIndicators();
+      //this.initFilter();
       this.makeZoomButtonsWork();
       this.makeInfoHoverFollowCursor();
       this.registerAboutTrigger();
       this.registerNiceScroll();
     },
 
-    fillLegendContent: function() {
-      // Fill legend
-      $.each(app.model.treeTypes, function(index, tree) {
-        $('#legend').append('<div id="legend-item-' + index + '" class="legend-item" data-filter="' + tree.name +
-            '"><svg id="circle-' + index +
-            '" height="10" width="20" xmlns="http://www.w3.org/2000/svg">' +
-            '<circle id="greencircle" cx="5" cy="5" r="5" fill="' +  tree.color + '" opacity="0.65" />' +
-            '</svg>' + tree.name + '</div>');
+    // little hack to keep tree's color consistant
+    correctColors: function gli() {
+      console.log(app.model.trees);
+      console.log($('#legend .row text'));
+      _.each(app.model.trees, function(tree) {
+        $('#legend .row text').each(function(idx, textEl) {
+          if(tree.name === $(this).html()) {
+            //$(this).after('<svg width="50px" height="50px"><circle id="greencircle" cx="100" cy="15" r="50" fill="' +
+            //    tree.color + '" opacity="0.65" /></svg>');
+            $(this).siblings('rect').attr('fill', tree.color);
+          }
+        });
       });
-      $('#legend').append('<div id="legend-item-999" class="legend-item"><svg id="circle-999' +
-            '" height="10" width="20" xmlns="http://www.w3.org/2000/svg">' +
-            '<circle id="greencircle" cx="5" cy="5" r="5" fill="#fff" opacity="0.65" />' +
-            '</svg>Sonstige</div>');
     },
+
+    // fillLegendContent: function() {
+    //   // Fill legend
+    //   $.each(app.model.trees, function(index, tree) {
+    //     $('#legend').append('<div id="legend-item-' + index + '" class="legend-item" data-filter="' + tree.name +
+    //         '"><svg id="circle-' + index +
+    //         '" height="10" width="20" xmlns="http://www.w3.org/2000/svg">' +
+    //         '<circle id="greencircle" cx="5" cy="5" r="5" fill="' +  tree.color + '" opacity="0.65" />' +
+    //         '</svg>' + tree.name + '</div>');
+    //   });
+    //   $('#legend').append('<div id="legend-item-999" class="legend-item"><svg id="circle-999' +
+    //         '" height="10" width="20" xmlns="http://www.w3.org/2000/svg">' +
+    //         '<circle id="greencircle" cx="5" cy="5" r="5" fill="#fff" opacity="0.65" />' +
+    //         '</svg>Sonstige</div>');
+    // },
 
     initFilter: function () {
       $(document).on('click', '.legend-item',  function() {
-        console.log($(this).data('filter'));
         app.controller.toggleNameFilter($(this).data('filter'));
         app.view.nameFilterVis();
       });
@@ -434,12 +589,10 @@ function hhtreesApp() {
       var nameFilter = app.model.nameFilter;
       if(nameFilter.length === 0) {
         // remove all inactives
-        console.log('remove');
         $('.legend-item').each(function(index) {
           $(this).removeClass('inactive');
         });
       } else {
-        console.log('add');
         $('.legend-item').each(function(index) {
           if(_.indexOf(nameFilter, $(this).data('filter')) === -1) {
             if(!$(this).hasClass('inactive')) {

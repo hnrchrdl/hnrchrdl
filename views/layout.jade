@@ -8,6 +8,7 @@ html
     title #{title} - hnrchrdl
     if title == 'HH Trees'
       != css('vendor/cartodb/cartodb')
+      != css('vendor/dcjs/dc')
     != css('main')
   body
     if title != 'HH Trees'
@@ -21,4 +22,7 @@ html
 
     != js('application')
     if title == 'HH Trees'
+      != js('lib/d3')
+      != js('lib/crossfilter')
+      != js('lib/dc')
       != js('hhtrees')

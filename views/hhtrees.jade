@@ -3,9 +3,14 @@ extends layout
 block content
 
   #hhtreesmap.map
+
   #loading
     i.fa.fa-circle-o-notch.fa-spin
-  #legend.legend
+  #crossfilter.crossfilter
+    #legend.legend
+    #pflanzjahr
+    #krone
+
   #controls.controls
     #zoomin.controlelement.left
       i.fa.fa-plus
@@ -13,7 +18,11 @@ block content
       i.fa.fa-minus
     .abouttrigger.controlelement
       i.fa.fa-question
+
   #info.info.controlelement
+
+
+
   .about
     i.fa.fa-close
     .inner

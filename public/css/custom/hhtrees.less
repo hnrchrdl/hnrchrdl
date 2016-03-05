@@ -1,5 +1,7 @@
 // Custom CSS for HH Trees
-
+body, .container {
+  height: 100%;
+}
 // VARIABLES
 @dark: rgb(10,10,10);
 @darkO: rgba(10,10,10,0.8);
@@ -20,7 +22,7 @@
 
 
 // CSS
-.map, .about, #loading, .legend, .controls, #info {
+.map, .about, #loading, .legend, .controls, #info, .crossfilter, #pflanzjahr, #krone {
   position: absolute;
 }
 
@@ -59,15 +61,24 @@
   }
 }
 
-.legend {
-  top: 0;
-  bottom: 16px;
-  right: 0;
-  width: 160px;
+.crossfilter {
   overflow-y: auto;
   .Dark-Background;
   color: @foreground;
   font-size: 90%;
+  top: 0;
+  bottom: 20px;
+  right: 0;
+  width: 840px;
+}
+
+.legend {
+  top: 0;
+  //max-height: 90%;
+  //max-height: calc(100% - 40px);
+  bottom: 20px;
+  right: 0;
+  width: 320px;
 }
 
 .legend-item {
@@ -79,6 +90,17 @@
 .legend-item.inactive {
   color: #333
 }
+
+#pflanzjahr, #krone {
+  width: 440px;
+  right: 340px;
+}
+#pflanzjahr {
+  top: 20px;
+}
+#krone {
+    bottom: 20px;
+ }
 
 .controls {
   top: 8px;
@@ -113,4 +135,27 @@
 
 .leaflet-control-attribution {
   .Dark-Background !important;
+}
+
+/* charts */
+.crossfilter rect.bar, .legend rect.bar {
+  fill: #fff;
+  opacity: 0.8;
+}
+g.row._20 rect {
+  fill: #eee !important;
+}
+.crossfilter rect.bar.deselected {
+  fill: @foreground;
+  opacity: 0.4;
+}
+.crossfilter text {
+  fill: @foreground;
+}
+.crossfilter .tick :not(text), .legend .tick :not(text) {
+  color: @foreground;
+  opacity: 0 !important;
+}
+.crossfilter .tick text {
+  opacity: 0.8 !important;
 }
