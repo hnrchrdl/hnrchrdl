@@ -432,9 +432,14 @@ function hhtreesApp() {
       $.each(app.model.trees, function(index, tree) {
         $.each(tree.filter, function(_index, filter) {
 
+<<<<<<< HEAD
           //cartoCss +=  '#' + app.options.cartodb.dataset + ' [ baumart =~ ".*' + filter + '.*" ] { marker-fill: ' + tree.color + ';} ';
           //cartoCss +=  '#' + app.options.cartodb.dataset + ' [ baumart =~ ".*' + filter.toLowerCase() + '.*" ] { marker-fill: ' + tree.color + ';} ';
           cartoCss +=  '#' + app.options.cartodb.dataset + ' [ baumart ="' + filter + '" ] { marker-fill: ' + tree.color + ';} ';
+=======
+          cartoCss +=  '#' + app.options.cartodb.dataset + ' [ baumart =~ ".*' + filter + '.*" ] { marker-fill: ' + tree.color + ';} ';
+          cartoCss +=  '#' + app.options.cartodb.dataset + ' [ baumart =~ ".*' + filter.toLowerCase() + '.*" ] { marker-fill: ' + tree.color + ';} ';
+>>>>>>> 88448c1d829efd5ccecd0a1646cd175cbfb3b108
         });
       });
       return cartoCss;
@@ -503,13 +508,25 @@ function hhtreesApp() {
       this.map.removeLayer(this.layer);
     },
 
+<<<<<<< HEAD
     applyFilter: function(filter) {
+=======
+    toggleNameFilter: function(filter) {
+      if(_.indexOf(app.model.nameFilter, filter) === -1) {
+        // Add to from nameFilter Array
+        app.model.nameFilter.push(filter);
+      } else {
+        // Remove from nameFilter Array
+        app.model.nameFilter.splice(_.indexOf(app.model.nameFilter, filter), 1);
+      }
+>>>>>>> 88448c1d829efd5ccecd0a1646cd175cbfb3b108
       var sql = '';
       if(app.model.nameFilter.length === 0) {
         sql = 'SELECT * FROM ' + app.options.cartodb.dataset;
       } else {
         // All the items of the array except from the last of the nameFilter Array
         _.each(_.initial(app.model.nameFilter), function(term) {
+<<<<<<< HEAD
           sql += 'SELECT * FROM ' + app.options.cartodb.dataset +
               ' WHERE baumart ILIKE \'%' + term + '%\' UNION ';
         });
@@ -530,6 +547,14 @@ function hhtreesApp() {
 
       console.log(sql);
 
+=======
+          sql += 'SELECT * FROM ' + app.options.cartodb.dataset + ' WHERE baumart ILIKE \'%' + term + '%\' UNION ';
+        });
+        // The last element of the nameFilter Array
+        sql += sql += 'SELECT * FROM ' + app.options.cartodb.dataset + ' WHERE baumart ILIKE \'%' + _.last(app.model.nameFilter) + '%\'';
+
+      }
+>>>>>>> 88448c1d829efd5ccecd0a1646cd175cbfb3b108
       this.layer.getSubLayer(0).setSQL(sql);
     }
 
@@ -539,15 +564,21 @@ function hhtreesApp() {
   app.view = {
 
     init: function() {
+<<<<<<< HEAD
       //  this.fillLegendContent();
       //this.generateLegendIndicators();
       //this.initFilter();
+=======
+      this.fillLegendContent();
+      this.initFilter();
+>>>>>>> 88448c1d829efd5ccecd0a1646cd175cbfb3b108
       this.makeZoomButtonsWork();
       this.makeInfoHoverFollowCursor();
       this.registerAboutTrigger();
       this.registerNiceScroll();
     },
 
+<<<<<<< HEAD
     // little hack to keep tree's color consistant
     correctColors: function gli() {
       console.log(app.model.trees);
@@ -560,6 +591,16 @@ function hhtreesApp() {
             $(this).siblings('rect').attr('fill', tree.color);
           }
         });
+=======
+    fillLegendContent: function() {
+      // Fill legend
+      $.each(app.model.treeTypes, function(index, tree) {
+        $('#legend').append('<div id="legend-item-' + index + '" class="legend-item" data-filter="' + tree.name +
+            '"><svg id="circle-' + index +
+            '" height="10" width="20" xmlns="http://www.w3.org/2000/svg">' +
+            '<circle id="greencircle" cx="5" cy="5" r="5" fill="' +  tree.color + '" opacity="0.65" />' +
+            '</svg>' + tree.name + '</div>');
+>>>>>>> 88448c1d829efd5ccecd0a1646cd175cbfb3b108
       });
     },
 
@@ -593,6 +634,36 @@ function hhtreesApp() {
           $(this).removeClass('inactive');
         });
       } else {
+        $('.legend-item').each(function(index) {
+          if(_.indexOf(nameFilter, $(this).data('filter')) === -1) {
+            if(!$(this).hasClass('inactive')) {
+              $(this).addClass('inactive');
+            }
+          } else {
+            $(this).removeClass('inactive');
+          }
+        });
+      }
+    },
+
+    initFilter: function () {
+      $(document).on('click', '.legend-item',  function() {
+        console.log($(this).data('filter'));
+        app.controller.toggleNameFilter($(this).data('filter'));
+        app.view.nameFilterVis();
+      });
+    },
+
+    nameFilterVis: function() {
+      var nameFilter = app.model.nameFilter;
+      if(nameFilter.length === 0) {
+        // remove all inactives
+        console.log('remove');
+        $('.legend-item').each(function(index) {
+          $(this).removeClass('inactive');
+        });
+      } else {
+        console.log('add');
         $('.legend-item').each(function(index) {
           if(_.indexOf(nameFilter, $(this).data('filter')) === -1) {
             if(!$(this).hasClass('inactive')) {
